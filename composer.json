@@ -1,0 +1,41 @@
+{
+  "name": "sloothword/laravel-bot",
+  "description": "Streamline your Telegram bot development",
+  "keywords": ["telegram", "telegram bot", "telegram php", "laravel telegram", "laravel"],
+  "type": "library",
+  "homepage": "https://github.com/sloothword/laravel-bot",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Sloothword",
+      "email": "sloothword@googlemail.com",
+      "homepage": "https://github.com/sloothword"
+    }
+  ],  
+  "require": {
+    "php": ">=7.0.0",
+    "laravel/framework": "5.3.*",
+    "irazasyed/telegram-bot-sdk": "dev-split-bot"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^4.8 || ^5.0"    
+  },
+  "autoload": {
+    "psr-4": {
+      "Telegram\\Bot\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Telegram\\Bot\\Tests\\": "tests/"
+    }
+  },  
+  "scripts": {
+    "test": "phpunit"
+  },  
+  "config": {
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
