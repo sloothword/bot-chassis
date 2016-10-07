@@ -1,8 +1,6 @@
-Laravel Telegram Bot
+Bot Chassis
 ====================
-
-
-> Adds a fully featured layer upon the basic telegram API (telegram-bot-sdk) to speed up telegram bot development with Laravel and Lumen (and plain PHP)
+> Adds a fully featured layer upon the basic telegram API (telegram-bot-sdk) to drastically speed up telegram bot development
 
 # Feature Overview
 

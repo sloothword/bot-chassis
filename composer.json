@@ -1,10 +1,10 @@
 {
-  "name": "sloothword/laravel-bot",
+  "name": "sloothword/bot-chassis",
   "description": "Streamline your Telegram bot development",
   "keywords": ["telegram", "telegram bot", "telegram php", "laravel telegram", "laravel"],
   "type": "library",
-  "homepage": "https://github.com/sloothword/laravel-bot",
-  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/sloothword/bot-chassis",
+  "license": "MIT",
   "authors": [
     {
       "name": "Sloothword",
@@ -14,20 +14,28 @@
   ],  
   "require": {
     "php": ">=7.0.0",
-    "laravel/framework": "5.3.*",
     "irazasyed/telegram-bot-sdk": "dev-split-bot"
   },
+  
+  "repositories": [
+        {
+            "type": "vcs",
+            "_url": "https://github.com/sloothword/telegram-bot-sdk",
+            "url":"../telegram-bot-sdk"
+        }
+    ],
+    
   "require-dev": {
     "phpunit/phpunit": "^4.8 || ^5.0"    
   },
   "autoload": {
     "psr-4": {
-      "Telegram\\Bot\\": "src/"
+      "Chassis\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Telegram\\Bot\\Tests\\": "tests/"
+      "Chassis\\Tests\\": "tests/"
     }
   },  
   "scripts": {
