@@ -2,6 +2,9 @@ Bot Chassis
 ====================
 > Adds a fully featured layer upon the basic telegram API (telegram-bot-sdk) to drastically speed up telegram bot development
 
+# Why?
+I really like the telegram-bot-sdk API, but to build a fully featured bot you need to do a lot of legwork first. Instead of jumping into defining the behaviour of the bot, you have to add a system to organise your action and route to them, a system to keep track of user conversations and pass data, and so on. This package wants to solve all these tasks to enable you to straight go to the fun part!
+
 # Feature Overview
 
 - Build upon telegram-bot-sdk (all features included and easy access to the API layer)
@@ -29,6 +32,29 @@ Bot Chassis
 - Simple binding/handling of callback_queries
 - Support for user/admin rights and controller authentication
 - And much more...
+
+# Installation
+
+## with Laravel
+Install Laravel
+```
+composer create-project --prefer-dist laravel/laravel mybot
+```
+Add `bot-chassis` to the composer.json:
+```
+composer require sloothword/bot-chassis
+```
+Add the LaravelServiceProvider in the app.php
+```
+'providers' => [
+        ...
+        
+        Chassis\Laravel\TelegramServiceProvider::class,
+```
+Publish the configuration
+```
+artisan vendor:publish
+```
 
 # Controller
 
@@ -199,13 +225,12 @@ All configuration is still done inside the telegram.php config file.
 use  \App\Telegram\Controller\{CatchallController, TextController, CallbackController};
 use \TeleBot\Bubbling;
 
-return [    
-   
-    'botclass' => 'App\Telegram\MyBot',
+return [
     
     'classes' => [
     	'bot' => App\Telegram\MyBot::class
-        'user' => App\User::class
+        'user' => App\User::class,
+        'storage' => App\User::class
     ],
     
     'sharedconfig' => [
@@ -288,10 +313,10 @@ Key | Description | Example
 ##### Example:
 ```
 'handler' => [
-    '*' => [ ExampleController::class, 'handleAll', Bubbling::BEFORE ],
-    'message' => [ ExampleController::class, 'handleMessage', Bubbling::AFTER ],
-    'text' => [ExampleController::class, 'handleText', Bubbling::NONE ],
-    '/XXX' => [ExampleController::class, 'handleXXX', Bubbling::NONE ]
+    ['*', ExampleController::class, 'handleAll', Bubbling::BEFORE ],
+    ['message', ExampleController::class, 'handleMessage', Bubbling::AFTER ],
+    ['text', ExampleController::class, 'handleText', Bubbling::NONE ],
+    ['/XXX', ExampleController::class, 'handleXXX', Bubbling::NONE ]
 ]
 ```
 Incoming Message | Called Handler
