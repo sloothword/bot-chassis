@@ -37,7 +37,6 @@ class ControllerBus
         foreach ($controllers as $controller) {
             $this->addController($controller);
         }
-        Log::info("All Controllers", $this->controllers);
     }
     
     public function addController($controller)
@@ -54,13 +53,11 @@ class ControllerBus
         if(!isset($this->controllers[$key])){
             $this->controllers[$key] = [];
         }
-        Log::info("Add Controller", $controller);
         $this->controllers[$key][] = [$class, $method];
     }
     
     function expandHierarchy($shortKey)
     {
-        Log::info('check Short Key', [$shortKey]);
 
         // TODO: complete
         $longKeys = [
@@ -104,7 +101,7 @@ class ControllerBus
     }
     
     // Returns full hierarchy to call for this update
-    function getUpdateHierarchy(Update $update)
+    public static function getUpdateHierarchy(Update $update)
     {        
         $updateType = $update->detectType();
         
@@ -131,8 +128,6 @@ class ControllerBus
     {
         $hierarchy = $this->getPartialHierarchy($handlerKeys, $depth);
         $key = $this->getControllerKey($hierarchy, $bubbling);
-        
-        Log::info("Get Handler", [$key]);
         
         if(isset($this->controllers[$key])){
             return $this->controllers[$key];
@@ -176,15 +171,19 @@ class ControllerBus
     
     function callControllers($controllers, $update)
     {
-        Log::info("Call Controllers", $controllers);
         foreach($controllers as $controller){
             // Find right controller actions to call
             $name = $controller[0];
             $method = $controller[1];
 
-            (new $name($this->bot, $update))->$method();
+            $this->callController($name, $method, $update);
             
         }
+    }
+    
+    public function callController($name, $method, $update, $data = null)
+    {
+        (new $name($this->bot, $update, $data))->$method();
     }
     
     /**

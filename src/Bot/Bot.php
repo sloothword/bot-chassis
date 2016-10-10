@@ -100,7 +100,6 @@ class Bot
      */
     public function checkForUpdates($webhook = false, $params = [])
     {
-        Log::info("check for updates");
         if ($webhook) {
             $updates = $this->getTelegram()->getWebhookUpdates();
         } else {

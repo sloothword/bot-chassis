@@ -8,10 +8,8 @@ use Illuminate\Contracts\Container\Container as Application;
 use Laravel\Lumen\Application as LumenApplication;
 use Illuminate\Foundation\Application as LaravelApplication;
 
-/**
- * Class TelegramServiceProvider.
- */
-class TelegramServiceProvider extends ServiceProvider
+
+class ChassisServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.
@@ -39,21 +37,30 @@ class TelegramServiceProvider extends ServiceProvider
      */
     protected function setupConfig(Application $app)
     {
-        $source = __DIR__.'/config/chassis.php';
+//        $source = __DIR__.'/config/chassis.php';
         
-        if ($app instanceof LaravelApplication && $app->runningInConsole()) {
-            $this->publishes([$source => config_path('chassis.php')]);
-        } elseif ($app instanceof LumenApplication) {
-            $app->configure('chassis');
-        }
+//        if ($app instanceof LaravelApplication && $app->runningInConsole()) {
+        $this->publishes([
+            __DIR__.'/config/chassis.php' => config_path('chassis.php')
+        ], 'config');
+            
+        $this->publishes([
+            __DIR__.'/migrations' => database_path('migrations')
+        ], 'migrations');
+        
+//        } elseif ($app instanceof LumenApplication) {
+//            $app->configure('chassis');
+//        }
 
-        $this->mergeConfigFrom($source, 'chassis');
+//        $this->mergeConfigFrom($source, 'chassis');
             
     }
     
     public function register() {
         $this->commands([
             \Chassis\Console\Commands\TelegramHandle::class,
+            \Chassis\Console\Commands\TelegramMe::class,
+            \Chassis\Console\Commands\TelegramDebug::class,
         ]);
         
        

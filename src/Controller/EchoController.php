@@ -18,4 +18,15 @@ class EchoController extends Controller{
             'text' => $this->getUpdate()->getMessage()->getText() . $this->getUpdate()->getMessage()->getText()
         ]);
     }
+    
+    public function delayed(){
+        $this->setNextController(self::class, 'delayedEcho', ['text' => $this->getUpdate()->getMessage()->getText()]);
+    }
+    
+    public function delayedEcho(){
+        $this->delayed();
+        $this->replyWithMessage([
+            'text' => $this->getUserData()['text']
+        ]);
+    }
 }

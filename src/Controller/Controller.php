@@ -9,15 +9,31 @@ class Controller {
     
     use \Telegram\Bot\Answers\Answerable;
     
-    public function __construct(ControllerBot $bot, Update $update) {
+    var $bot;
+    
+    public function __construct(ControllerBot $bot, Update $update, $data = null) {
         $this->update = $update;
+        $this->bot = $bot;
+        $this->data = $data;
         
         // TODO: Fix in Answerable
         $this->telegram = $bot->getTelegram();
     }
     
-    function getTextWithoutCommand(){
+    protected function setNextController($name, $method, $data = []){
         
+        $data['controller'] = ['name' => $name, 'method' => $method];        
+        
+        $this->bot->setUserData($this->getUpdate(), $data);        
+    }
+    
+    protected function clearNextController(){
+        $this->bot->clearUserData($this->getUpdate());
+    }
+    
+    function getUserData()
+    {
+        return $this->data;
     }
     
 }
