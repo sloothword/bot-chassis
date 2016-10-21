@@ -20,6 +20,8 @@ class BotsManager
     public function __construct($telegramConfig, $chassisConfig)
     {
         $telegramConfig['bots'] = $this->convertBotsToTelegramConfig($chassisConfig['bots']);
+        Log::info("Config 'Telegram'", $telegramConfig);
+        Log::info("Config 'Chassis'", $chassisConfig);
         
         $this->config = $chassisConfig;
         $this->botsManager = new \Telegram\Bot\BotsManager($telegramConfig);
@@ -77,10 +79,12 @@ class BotsManager
      *
      * @return Bot
      */
-    protected function makeBot($name)
+    public function makeBot($name, $api = null)
     {
         Log::info("Make Bot", [$name]);
-        $api = $this->botsManager->bot($name);
+        if($api === null){
+            $api = $this->botsManager->bot($name);
+        }
         
         $config = $this->getBotConfig($name);
         

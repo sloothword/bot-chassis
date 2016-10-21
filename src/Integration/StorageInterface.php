@@ -4,9 +4,11 @@ namespace Chassis\Integration;
 
 interface StorageInterface
 {
-    function save($userId, $chatId, $key, $data);
+    function save($key, $data);
     
-    function load($userId, $chatId, $key);
+    function load($key);
     
-    function delete($userId, $chatId, $key);
+    function delete($key);
+    
+    function flush();
 }

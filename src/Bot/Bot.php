@@ -98,7 +98,7 @@ class Bot
      * @param array $params See Api->getUpdates()
      * @return Update[]
      */
-    public function checkForUpdates($webhook = false, $params = [])
+    public function checkForUpdates($webhook = false, $params = [], $process = true)
     {
         if ($webhook) {
             $updates = $this->getTelegram()->getWebhookUpdates();
@@ -108,7 +108,9 @@ class Bot
         
         $highestId = -1;
         foreach ($updates as $update) {
-            $this->processUpdate($update);
+            if($process){
+                $this->processUpdate($update);
+            }            
             $highestId = $update->getUpdateId();
         }
         

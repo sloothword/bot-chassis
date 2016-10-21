@@ -136,7 +136,7 @@ class ControllerBus
         }        
     }
     
-    function callUpdateControllers(Update $update)
+    function callUpdateControllers(Update $update, $userData)
     {
         $handlerKeys = $this->getUpdateHierarchy($update);
         $maxDepth = count($handlerKeys);
@@ -146,7 +146,7 @@ class ControllerBus
             $controller = $this->getHandler($handlerKeys, $depth, Bubbling::BEFORE);
             if(count($controller) > 0){
                 $deepestFound = $depth;
-                $this->callControllers($controller, $update);
+                $this->callControllers($controller, $update, $userData);
             }
         }
         
@@ -155,7 +155,7 @@ class ControllerBus
             $controller = $this->getHandler($handlerKeys, $depth, Bubbling::AFTER);
             if(count($controller) > 0){
                 $deepestFound = $depth;
-                $this->callControllers($controller, $update);
+                $this->callControllers($controller, $update, $userData);
             }
         }
         
@@ -163,27 +163,27 @@ class ControllerBus
             $controller = $this->getHandler($handlerKeys, $depth, Bubbling::NONE);
             if(count($controller) > 0){
                 $deepestFound = $depth;
-                $this->callControllers($controller, $update);
+                $this->callControllers($controller, $update, $userData);
                 break;
             }
         }        
     }
     
-    function callControllers($controllers, $update)
+    function callControllers($controllers, $update, $userData)
     {
         foreach($controllers as $controller){
             // Find right controller actions to call
             $name = $controller[0];
             $method = $controller[1];
 
-            $this->callController($name, $method, $update);
+            $this->callController($name, $method, $update, $userData);
             
         }
     }
     
-    public function callController($name, $method, $update, $data = null)
+    public function callController($name, $method, $update, $userData = null)
     {
-        (new $name($this->bot, $update, $data))->$method();
+        (new $name($this->bot, $update, $userData))->$method();
     }
     
     /**
@@ -191,8 +191,8 @@ class ControllerBus
      *
      * @param $update
      */
-    public function handler(Update $update)
+    public function handler(Update $update, $userData)
     {
-        $this->callUpdateControllers($update);
+        $this->callUpdateControllers($update, $userData);
     }
 }

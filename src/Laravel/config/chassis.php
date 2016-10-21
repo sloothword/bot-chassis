@@ -31,7 +31,8 @@ return [
             'shared' => [],
             'controllers' => [
                 ['text', EchoController::class, 'once', Bubbling::NONE],
-                ['\double', EchoController::class, 'twice', Bubbling::AFTER]
+                ['\double', EchoController::class, 'twice', Bubbling::AFTER],
+                ['\delayed', EchoController::class, 'delayed', Bubbling::AFTER]
             ],          
         ],
     ]

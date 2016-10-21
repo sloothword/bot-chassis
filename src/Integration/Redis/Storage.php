@@ -13,29 +13,25 @@ class Storage implements StorageInterface
         $this->redis = resolve('redis');        
     }
     
-    function getKey($userId, $chatId, $key)
-    {
-        return $userId.$chatId.$key;
-    }
-    
-    public function delete($userId, $chatId, $key) {
-        $this->redis->del($this->getKey($userId, $chatId, $key));
+    public function delete($key) {
+        $this->redis->del($key);
     }
 
-    public function load($userId, $chatId, $key) {
-        Log::info('Load', [$userId, $chatId, $key]);
+    public function load($key) {
         
-        $redisKey = $this->getKey($userId, $chatId, $key);
-        if(!$this->redis->exists($redisKey)){
+        if(!$this->redis->exists($key)){
             return null;
         }
-        Log::info('Loaded', [$this->redis->hget($redisKey, 'data')]);
-        return json_decode($this->redis->hget($redisKey, 'data'), true);
+        return json_decode($this->redis->hget($key, 'data'), true);
+    }
+    
+    public function flush(){
+        $this->redis->flushdb();
     }
 
-    public function save($userId, $chatId, $key, $data) {
+    public function save($key, $data) {
 //        $this->redis->multi();
-        $this->redis->hset($this->getKey($userId, $chatId, $key), 'data', json_encode($data));
+        $this->redis->hset($key, 'data', json_encode($data));
 //        $this->redis->exec();
     }
 }

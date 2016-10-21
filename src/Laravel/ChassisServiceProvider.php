@@ -58,9 +58,9 @@ class ChassisServiceProvider extends ServiceProvider
     
     public function register() {
         $this->commands([
-            \Chassis\Console\Commands\TelegramHandle::class,
+            \Chassis\Console\Commands\ChassisHandle::class,
             \Chassis\Console\Commands\TelegramMe::class,
-            \Chassis\Console\Commands\TelegramDebug::class,
+            \Chassis\Console\Commands\ChassisFlush::class,            
         ]);
         
        

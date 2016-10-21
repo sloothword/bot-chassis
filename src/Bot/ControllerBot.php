@@ -15,18 +15,14 @@ class ControllerBot extends Bot
      */
     protected $controllerBus = null;
     
-    /**
-     * 
-     * @var StorageInterface
-     */
-    protected $storage;
-    
+    var $userDataRepository;
+        
     public function __construct($api, $config) {
         parent::__construct($api, $config);
         
         // TODO: read config
-        $this->storage = new \Chassis\Integration\Redis\Storage();
-    }
+        $this->userDataRepository = new \Chassis\UserData\UserDataRepository(new \Chassis\Integration\Redis\Storage());
+    }    
     
     public function readConfig($config)
     {        
@@ -58,20 +54,24 @@ class ControllerBot extends Bot
         // Check for existing user Data        
         if($update->isType('callback_query')){
             $key = $update->getCallbackQuery()->getData();
-            $data = $this->getUserData($update, $key);
+            $userData = $this->userDataRepository->load($update, $key);
         }else{
-            $data = $this->getUserData($update);
+            $userData = $this->userDataRepository->load($update);
         }
-            
-        if(isset($data['controller'])){
-            $this->getControllerBus()->callController($data['controller']['name'], $data['controller']['method'], $update, $data);
+        
+        $data = $userData->getCollection();
+        
+        
+        if($data->has('controller')){
+            $this->getControllerBus()->callController($data['controller']['name'], $data['controller']['method'], $update, $userData);
         }else{
             // No user data -> route Controller like normal
-            $this->getControllerBus()->handler($update);
+            $this->getControllerBus()->handler($update, $userData);
         }
-    }
+        $userData->save();
+    }    
     
-    function getStorageKeys($update)
+    function getMessage($update)
     {
         switch ($update->detectType()){
             case 'message':
@@ -81,21 +81,6 @@ class ControllerBot extends Bot
                 $message = $update->getCallbackQuery()->getMessage();
                 break;
         }
-        $userId = $message->getFrom()->getId();
-        $chatId = $message->getChat()->getId();
-        
-        return [$userId, $chatId];
-    }
-    
-    function setUserData($update, $data)
-    {
-        $keys = $this->getStorageKeys($update);
-        $this->storage->save($keys[0], $keys[1], null, $data);
-    }
-    
-    function getUserData($update, $key = null)
-    {
-        $keys = $this->getStorageKeys($update);        
-        return $this->storage->load($keys[0], $keys[1], $key);
+        return $message;
     }
 }
