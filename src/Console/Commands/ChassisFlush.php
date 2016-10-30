@@ -20,7 +20,7 @@ class ChassisFlush extends Command
      *
      * @var string
      */
-    protected $description = 'Flush all pending updates and the UserData storage';
+    protected $description = 'Flush all pending updates and the MetaData storage';
 
     /**
      * Execute the console command.

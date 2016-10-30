@@ -26,7 +26,7 @@ class EchoController extends Controller{
     public function delayedEcho(){
         $this->delayed();
         $this->replyWithMessage([
-            'text' => $this->getUserData()['text']
+            'text' => $this->getConversationData()['text']
         ]);
     }
 }

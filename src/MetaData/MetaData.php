@@ -1,6 +1,6 @@
 <?php
 
-namespace Chassis\UserData;
+namespace Chassis\MetaData;
 
 use Illuminate\Support\Collection;
 use Countable;
@@ -15,22 +15,29 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 
-class UserData
-{
-    var $collection;
-    var $needsSaving = false;
+class MetaData extends Collection
+{    
+    var $shallRemove = false;
     
-    public function __construct($repo, $key, $items = array()) {
-        $this->collection = new Collection($items);
+    public function connect($repo, $key){
         $this->repo = $repo;
         $this->key = $key;
+    }
+    
+    public function disconnect(){
+        return new Collection($this->items);
+    }
+    
+    public function replaceItems($metaData){
+        $this->items = $metaData->all();
+        $this->shallRemove = $this->isEmpty();
     }
     
     var $repo;
     var $key;
     
     function save(){
-        if($this->collection->isEmpty() && $this->needsSaving){
+        if($this->shallRemove){
             $this->repo->delete($this->getKey());
         }else{
             $this->repo->save($this);
@@ -42,15 +49,8 @@ class UserData
         return $this->key;
     }
     
-    public function getCollection(){
-        return $this->collection;
+    function clear(){
+        $this->replaceItems(new Collection());
     }
-    
-    function replaceCollection($collection){
-        $this->needsSaving = true;
-        $this->collection = $collection;
-    }
-    
-
 }
 

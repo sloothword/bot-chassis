@@ -3,7 +3,7 @@ Bot Chassis
 > Adds a fully featured layer upon the basic telegram API (telegram-bot-sdk) to drastically speed up telegram bot development
 
 # Why?
-I really like the telegram-bot-sdk API, but to build a fully featured bot you need to do a lot of legwork first. Instead of jumping into defining the behaviour of the bot, you have to add a system to organise your action and route to them, a system to keep track of user conversations and pass data, and so on. This package wants to solve all these tasks to enable you to straight go to the fun part!
+The telegram-bot-sdk offers a stable API layer for bot development. However, for a fully featured bot many aspects are missing. Instead of jumping into defining the behaviour of the bot, you first need some routing system to handle arbitrary updates, a system to keep track of user conversations and persist associated data, and so on. This package aims to implemet this middle layer and enables you to go straight for the fun part!
 
 # Feature Overview
 
@@ -17,7 +17,7 @@ I really like the telegram-bot-sdk API, but to build a fully featured bot you ne
 
 
 - Automatic binding of your applications user model to the telegram user.
-- Out-of-the-box persistent data storage (matched to user and chat_id) 
+- Out-of-the-box persistent data storage per conversation (linked to user and chat) or message (for callbak_queries)
 - Support for conversations (chain of messages)
 
 
@@ -28,7 +28,7 @@ I really like the telegram-bot-sdk API, but to build a fully featured bot you ne
 - Special support for commands (`/text arg1 arg2`) with argument parsing, and validation
 - Listen for keywords in text messages
 - Debug and test your bot offline and without telegram
-- Input/Output Middleware
+- Pipelining: Add Input/Output Middleware
 - Simple binding/handling of callback_queries
 - Support for user/admin rights and controller authentication
 - And much more...
@@ -49,9 +49,9 @@ Add the LaravelServiceProvider in the app.php
 'providers' => [
         ...
         
-        Chassis\Laravel\TelegramServiceProvider::class,
+        Chassis\Laravel\ChassisServiceProvider::class,
 ```
-Publish the configuration
+Publish the configuration (and migrations)
 ```
 artisan vendor:publish
 ```
@@ -66,22 +66,20 @@ namespace App\Telegram\Controller;
 
 use TelegramBot\Controller;
 
-class ExampleController extends Controller
+class EchoController extends Controller
 {
     
-    public function doSomething()
+    public function sendEcho()
     {
-    	$text = $this->getMessage()->getText();
-        
-        $this->replyWithMessage([
-        	'text' => 'You sent: ' .$text
+    	$this->replyWithMessage([
+        	'text' => 'You sent: ' .$this->getText()
         ]);
     }
 }
 ```
 
 ## User Data
-You can save data associated with the current discussion thread in a `Conversation` object. Calling `$this->getConversation()` returns the Conversation linked to the user and chat the update originated from. Save and load your data with `->addData($key, $value)` and `->getData($key)`. 
+You can save data associated with the current discussion thread in a `Conversation` object. Calling `$this->getConversation()` returns the Conversation linked to the user and chat the update originated from. Save and load your data with `->addData($key, $value)` and `->getData($key)`.
 
 ## Conversations
 With the Conversation object is also pretty straightforward to implement multi-step conversation threads. `Conversation->nextStep($class, $function)` defines which function should be called to handle the next text message of the current chat and user. This setting overrules the normal routing.
@@ -217,7 +215,7 @@ To separate the View and Controller concerns (MVC) and to simplify the creation 
 
 
 # Configuration
-All configuration is still done inside the telegram.php config file.
+All configuration is still done inside the chassis.php config file.
 > The configuration keys not eyplained here come from telegram-bot-sdk (XXX).
 
 ## telegram.php
@@ -343,9 +341,9 @@ The following artisan commands are available for your convenience:
 
 Command | Description
 -------------- | -----------
-`telegram:handle`| Load and process all pending telegram updates. Optional argument specifies bot. Otherwise all bots get called.
-`telegram:loop`| Read and process updates in a loop. Optional argument specifies bot. Otherwise all bots get called.
-`telegram:message` | Open interactive console to emulate an telegram client and test your bot offline.
+`chassis:handle`| Load and process all pending telegram updates. Optional argument specifies bot. Otherwise all bots get called.
+`chassis:loop`| Read and process updates in a loop. Optional argument specifies bot. Otherwise all bots get called.
+`chassis:message` | Open interactive console to emulate an telegram client and test your bot offline.
 
 # Telegram-Bot-SDK
 - config included

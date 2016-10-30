@@ -29,6 +29,7 @@ class ChassisHandle extends Command
      */
     public function handle()
     {
+        
         $this->comment("Startup default bot");
         
         /** @var BotsManager **/
@@ -39,17 +40,17 @@ class ChassisHandle extends Command
         $bot = $botsManager->bot();
         
         while(true){
-            $start = microtime(true);
-            $updates = $bot->checkForUpdates();
-            $end = microtime(true);
+            
+            $updates = $bot->checkForUpdates(false, ['timeout' => 60]);
+            
             if(count($updates) > 0){
-                $this->comment("Processed ".count($updates) ." in " . ($end-$start)*1000 ." ms");
+                $this->comment("Processed ".count($updates));
+            }else{
+                $this->comment("Timed out -> Start next long poll");
             }
             foreach ($updates as $update) {                    
                 $this->comment($this->getUpdateText($update));
             }
-            
-            usleep(100);
         }
     }
     

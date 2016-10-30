@@ -15,13 +15,13 @@ class ControllerBot extends Bot
      */
     protected $controllerBus = null;
     
-    var $userDataRepository;
+    var $metaDataRepository;
         
     public function __construct($api, $config) {
         parent::__construct($api, $config);
         
         // TODO: read config
-        $this->userDataRepository = new \Chassis\UserData\UserDataRepository(new \Chassis\Integration\Redis\Storage());
+        $this->metaDataRepository = new \Chassis\MetaData\MetaDataRepository(new \Chassis\Integration\Redis\Storage());
     }    
     
     public function readConfig($config)
@@ -51,27 +51,23 @@ class ControllerBot extends Bot
     {
         Log::info("Process UPDATE");
         
-        // Check for existing user Data        
-        if($update->isType('callback_query')){
-            $key = $update->getCallbackQuery()->getData();
-            $userData = $this->userDataRepository->load($update, $key);
+        if($update->has('callback_query')){
+            $metaData = $this->metaDataRepository->load($this->getMessage($update));
         }else{
-            $userData = $this->userDataRepository->load($update);
+            $metaData = $this->metaDataRepository->load($update);
         }
         
-        $data = $userData->getCollection();
-        
-        
-        if($data->has('controller')){
-            $this->getControllerBus()->callController($data['controller']['name'], $data['controller']['method'], $update, $userData);
+        if($metaData->has('controller')){
+            $this->getControllerBus()->callController($metaData['controller']['name'], $metaData['controller']['method'], $update, $this->metaDataRepository);
         }else{
             // No user data -> route Controller like normal
-            $this->getControllerBus()->handler($update, $userData);
+            $this->getControllerBus()->handler($update, $this->metaDataRepository);
         }
-        $userData->save();
+        $this->metaDataRepository->saveAll();
     }    
     
-    function getMessage($update)
+    // TODO: put into SDK
+    static function getMessage($update)
     {
         switch ($update->detectType()){
             case 'message':

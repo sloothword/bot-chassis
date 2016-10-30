@@ -4,7 +4,10 @@
 // creates Bot (with Controller support)
 
 namespace Chassis\Bot;
+
+use GuzzleHttp\Client;
 use Log;
+use Telegram\Bot\HttpClients\GuzzleHttpClient;
 
 class BotsManager
 {
@@ -19,6 +22,10 @@ class BotsManager
     
     public function __construct($telegramConfig, $chassisConfig)
     {
+        if(isset($chassisConfig['telegram'])){
+            $telegramConfig = array_merge($telegramConfig, $chassisConfig['telegram']);
+        }
+        
         $telegramConfig['bots'] = $this->convertBotsToTelegramConfig($chassisConfig['bots']);
         Log::info("Config 'Telegram'", $telegramConfig);
         Log::info("Config 'Chassis'", $chassisConfig);

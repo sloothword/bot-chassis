@@ -181,7 +181,7 @@ class ControllerBus
         }
     }
     
-    public function callController($name, $method, $update, $userData = null)
+    public function callController($name, $method, $update, $userData)
     {
         (new $name($this->bot, $update, $userData))->$method();
     }
