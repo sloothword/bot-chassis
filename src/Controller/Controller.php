@@ -3,210 +3,264 @@
 namespace Chassis\Controller;
 
 use Chassis\Bot\ControllerBot;
-use Chassis\MetaData\ConversationData;
-use Chassis\MetaData\MetaDataRepository;
-use Log;
-use Telegram\Bot\Keyboard\Keyboard;
-use Telegram\Bot\Objects\Update;
-use View;
 use Chassis\Helper\Pagination;
+use Chassis\MetaData\ConversationData;
+use Chassis\MetaData\MessageData;
+use Chassis\MetaData\MetaData;
+use Chassis\MetaData\MetaDataRepository;
 
-class Controller {
-    
+use Telegram\Bot\Keyboard\Keyboard;
+use Telegram\Bot\Objects\Chat;
+use Telegram\Bot\Objects\Message;
+use Telegram\Bot\Objects\Update;
+use Telegram\Bot\Objects\User;
+
+use View;
+
+/**
+ * Controllers encapsulate the handling logic for a specific Update type in a single class
+ */
+class Controller
+{
+
     use \Telegram\Bot\Answers\Answerable;
-    use Editable;
-    
+    use \Chassis\Controller\Editable;
+
     /**
-     * @var ControllerBot
+     * @var ControllerBot The associated Bot
      */
     var $bot;
-    
+
     /**
      *
      * @var MetaDataRepository
      */
     private $metaDataRepository;
-    
-    function getBot()
+
+    /**
+     * @return Bot
+     */
+    public function getBot()
     {
         return $this->bot;
     }
-    
-    public function __construct(ControllerBot $bot, Update $update, $metaDataRepository) {
+
+    public function __construct(ControllerBot $bot, Update $update, MetaDataRepository $metaDataRepository)
+    {
         $this->update = $update;
         $this->bot = $bot;
         $this->metaDataRepository = $metaDataRepository;
-        
-        // TODO: Fix in Answerable
+
+        /** @TODO: Fix in Answerable (getTelegram calls $bot->getT internally) */
         $this->telegram = $bot->getTelegram();
     }
-    
-    function getMetaData($object){
-        return $this->metaDataRepository->load($object);
-    }    
-    
+
     /**
-     * 
+     *
+     * @param Update|Message|User|Chat $object
+     * @return MetaData
+     */
+    public function getMetaData($object)
+    {
+        return $this->metaDataRepository->load($object);
+    }
+
+    /**
+     * Get ConversationData associated with current user and chat
+     *
      * @return ConversationData
      */
-    function getConversationData(){
-        Log::info("Conversation", $this->getMetaData($this->getUpdate())->all());
-        Log::info("Conversation Class", [get_class($this->getMetaData($this->getUpdate()))]);
+    public function getConversationData()
+    {
         return $this->getMetaData($this->getUpdate());
     }
-    
-    /** 
+
+    /**
+     * Get associated MessageData
+     *
      * @return MessageData
      */
-    function getMessageData($message){
+    public function getMessageData($message)
+    {
         return $this->getMetaData($message);
     }
-    
-    function createReplyKeyboard($buttons, $inline = false, $cols = null){
-        
+
+    /**
+     * Helper function to create a reply Keyboard from a Collection
+     * @TODO: WIP, needs rewrite or move
+     *
+     * @param array $buttons
+     * @param boolean $inline
+     * @param int $cols Number of buttons per row
+     * @return Keyboard
+     */
+    protected function createReplyKeyboard($buttons, $inline = false, $cols = null)
+    {
+
         $count = count($buttons);
-        if($cols == null){
+        if ($cols == null) {
             $cols = 3;
         }
-        
-        $rows = []; $row = [];
+
+        $rows = [];
+        $row = [];
         foreach ($buttons as $button) {
-            
-            if($inline){
+
+            if ($inline) {
                 $row[] = Keyboard::inlineButton(['text' => $button, 'callback_data' => $button]);
-            }else{
+            } else {
                 $row[] = Keyboard::button(['text' => $button]);
             }
-            
-            if(count($row) == $cols){
+
+            if (count($row) == $cols) {
                 $rows[] = $row;
                 $row = [];
             }
         }
-        if(count($row)>0){
+        if (count($row) > 0) {
             $rows[] = $row;
         }
-        
+
         $property = 'keyboard';
         if ($inline) {
             $property = 'inline_keyboard';
         }
-        
+
         $k = Keyboard::make([$property => $rows]);
         $k->setResizeKeyboard(true);
         $k->setOneTimeKeyboard(true);
-        Log::info("Keyboard created", $k->all());
-        return $k;        
+        return $k;
     }
-    
-    function resizeArray($list, $x, $y){        
-        $array = []; 
 
-        $row = [];
-        foreach ($list as $value) {
-            $row[] = $value;
-            if(count($row) == $x){
-                $array[] = $row;
-                $row = [];
-            }
-            if(count($array) == $y){
-                return $array;
-            }
-        }
-        if(count($row) > 0){
-            $array[] = $row;
-        }
-        return $array;
-    }
-    
     /**
+     * Ask the user some basic questions one after the other.
+     *
+     * @param array $questions
+     * Each entry defines one question, the answer is stored under the key.
+     * The first field of the question is the text, the optional second defines the method returning answer suggestions.
+     *
      * Example:
      * ['key1' => ['Question to Ask for Data1', 'getData1Suggestions']
-     * @param array $data
+     *
+     * @return boolean returns whether questionaire is complete
      */
-    function completeQuestionnaire($data){
-        if($this->shallAbort()){
-            $this->abortConversation();
-            return;
-        }
-        
+    public function completeQuestionnaire($questions)
+    {
+        /** @TODO: Add option to abort */
+//        if($this->shallAbort()){
+//            $this->abortConversation();
+//            return;
+//        }
+        // Check what was asked last and save answer
         $userData = $this->getConversationData();
-        if($userData->has('asked')){
+        if ($userData->has('asked')) {
             $userData[$userData['asked']] = $this->getText();
         }
-        
-        foreach ($data as $key => $requiredData){
-            if($userData->has($key)){
-            
-            }else{
+
+        // Get first unasked question
+        foreach ($questions as $key => $requiredData) {
+            if (!$userData->has($key)) {
                 $buttons = null;
-                if(count($requiredData)>1){
+                if (count($requiredData) > 1) {
                     $buttons = $this->{$requiredData[1]}($key);
                 }
                 $userData['asked'] = $key;
                 $this->replyWithMessage(
                     $this->createReply(null, $requiredData[0], $buttons)
-                );                
+                );
                 return false;
             }
         }
         return true;
-    }   
-    
-    function createReply($view = null, $data = null, $buttons = null, $params = []){
-        
+    }
+
+    /**
+     * Helper function to generate parameter array for the replyWithMessage and editMessage functions
+     *
+     * Function adds 'text', 'parse_mode' and 'reply_markup' properties to $param.
+     *
+     * @param string $view name of view to render for the text
+     * @param array $data data for view or message text (if $view is null)
+     * @param array|Keyboard|null $buttons Buttons for reply Keyboard. null to hide Keyboard
+     * @param array $params
+     * @return array
+     */
+    public function createReply($view = null, $data = null, $buttons = null, $params = [])
+    {
+
         // If view set --> render view
-        if($view !== null){
+        if ($view !== null) {
             $params['text'] = $this->renderView($view, $data);
             $params['parse_mode'] = 'markdown';
-        }elseif($data != null){
+        } elseif ($data != null) {
             $params['text'] = $data;
         }
-        
-        if($buttons === null){
+
+        if ($buttons === null) {
             $keyboard = Keyboard::hide();
-        }elseif($buttons instanceof Keyboard){
+        } elseif ($buttons instanceof Keyboard) {
             // Do nothing
             $keyboard = $buttons;
-        }elseif(is_array ($buttons) or $buttons instanceof \ArrayAccess){
-            if(isset($buttons['buttons'])){
+        } elseif (is_array($buttons) or $buttons instanceof \ArrayAccess) {
+            if (isset($buttons['buttons'])) {
                 $inline = isset($buttons['inline']) ? $buttons['inline'] : false;
                 $cols = isset($buttons['cols']) ? $buttons['cols'] : null;
                 $keyboard = $this->createReplyKeyboard($buttons['buttons'], $inline, $cols);
-            }else{
+            } else {
                 $keyboard = $this->createReplyKeyboard($buttons);
             }
         }
         $params['reply_markup'] = $keyboard;
-        
-        Log::info('Reply', $params);
+
         return $params;
-    }    
-    
-    function renderView($view, $data = [])
+    }
+
+    /**
+     * Render view and remove whitespace
+     *
+     * @param string $view
+     * @param string $data
+     * @return string
+     */
+    public function renderView($view, $data = [])
     {
         return str_replace("    ", "", View::make($view, $data)->render());
     }
-    
-    function execute($controller, $method, $update = null)
+
+    /**
+     * Pass handling of update to a different controller
+     *
+     * @param string $controller class of controller
+     * @param string $method
+     * @param null|Update|string $update Update or message text
+     */
+    public function execute($controller, $method, $update = null)
     {
-        if($update === null){
+        if ($update === null) {
             $update = $this->getUpdate();
-        }else if($update instanceof Update){
-            
-        }else{
+        } else if ($update instanceof Update) {
+
+        } else {
             $update = new Update(['message' => ['text' => $update]]);
         }
-        
+
         $this->getBot()->getControllerBus()->callController($controller, $method, $update, $this->metaDataRepository);
     }
-    
-    function getPagination($perPage = 5, $count = -1){
+
+    /**
+     * Helper function to integrate pagination of messages
+     *
+     * @param int $perPage
+     * @param int $count
+     * @return Pagination
+     */
+    public function getPagination($perPage = 5, $count = -1)
+    {
         $metaData = $this->getMessageData(ControllerBot::getMessage($this->getUpdate()));
-        
+
         $page = $metaData->has('page') ? $metaData['page'] : 0;
         $perPage = $metaData->has('perPage') ? $metaData['perPage'] : $perPage;
-                
+
         return new Pagination($page, $perPage, $count);
     }
 }

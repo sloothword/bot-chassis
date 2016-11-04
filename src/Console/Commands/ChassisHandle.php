@@ -3,11 +3,13 @@
 namespace Chassis\Console\Commands;
 
 use Chassis\Bot\BotsManager;
+use Chassis\Controller\ControllerBus;
 use Illuminate\Console\Command;
-use Log;
+use Telegram\Bot\Objects\Update;
 
 class ChassisHandle extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -29,37 +31,42 @@ class ChassisHandle extends Command
      */
     public function handle()
     {
-        
+
         $this->comment("Startup default bot");
-        
-        /** @var BotsManager **/
+
+        /** @var BotsManager * */
         $botsManager = resolve('chassis');
-        
-        $this->comment("Default Bot: " .$botsManager->getDefaultBot());
-        
+
+        $this->comment("Default Bot: " . $botsManager->getDefaultBot());
+
         $bot = $botsManager->bot();
-        
-        while(true){
-            
+
+        while (true) {
+
+            // Long poll for updates
             $updates = $bot->checkForUpdates(false, ['timeout' => 60]);
-            
-            if(count($updates) > 0){
-                $this->comment("Processed ".count($updates));
-            }else{
+
+            if (count($updates) > 0) {
+                $this->comment("Processed " . count($updates));
+            } else {
                 $this->comment("Timed out -> Start next long poll");
             }
-            foreach ($updates as $update) {                    
+            foreach ($updates as $update) {
                 $this->comment($this->getUpdateText($update));
             }
         }
     }
-    
-    function getUpdateText($update)
+
+    /**
+     * Short update description
+     *
+     * @param Update $update
+     * @return string
+     */
+    private function getUpdateText(Update $update)
     {
         $id = $update->getUpdateId();
-        $type = implode(".", \Chassis\Controller\ControllerBus::getUpdateHierarchy($update));
-        return $id .": " .$type;
+        $type = implode(".", ControllerBus::getUpdateHierarchy($update));
+        return $id . ": " . $type;
     }
-    
-    
 }

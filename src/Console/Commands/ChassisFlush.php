@@ -2,12 +2,11 @@
 
 namespace Chassis\Console\Commands;
 
-use Chassis\Bot\BotsManager;
 use Illuminate\Console\Command;
-use Log;
 
 class ChassisFlush extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -29,14 +28,15 @@ class ChassisFlush extends Command
      */
     public function handle()
     {
+        /*
+         * Flush the MetaData storage
+         * @TODO: read config for desired storage
+         */
         (new \Chassis\Integration\Redis\Storage())->flush();
-        
+
+        // Read and discard all updates
         $botsManager = resolve('chassis');
-        
         $bot = $botsManager->bot();
         $bot->checkForUpdates(false, [], false);
     }
-    
-    
-    
 }

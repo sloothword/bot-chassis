@@ -4,36 +4,53 @@ namespace Chassis\Bot;
 
 use Chassis\Bot\Bot;
 use Chassis\Controller\ControllerBus;
-use Telegram\Bot\Commands\CommandBus;
+use Chassis\Integration\Redis\Storage;
+use Chassis\MetaData\MetaDataRepository;
+use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
-use Log;
 
+/**
+ * Uses Controllers to handle incoming Updates
+ */
 class ControllerBot extends Bot
 {
-    /**
-     * @var ControllerBus Telegram Command Bus.
-     */
+
+    /** @var ControllerBus */
     protected $controllerBus = null;
-    
-    var $metaDataRepository;
-        
-    public function __construct($api, $config) {
+
+    /** @var MetaDataRepository */
+    protected $metaDataRepository;
+
+    /**
+     *
+     * @param Api $api
+     * @param array $config
+     */
+    public function __construct(Api $api, array $config)
+    {
         parent::__construct($api, $config);
-        
-        // TODO: read config
-        $this->metaDataRepository = new \Chassis\MetaData\MetaDataRepository(new \Chassis\Integration\Redis\Storage());
-    }    
-    
-    public function readConfig($config)
-    {        
-        $this->controllerBus = new ControllerBus($this);        
+
+        /** @TODO: read storage backend from config */
+        $this->metaDataRepository = new MetaDataRepository(new Storage());
+    }
+
+    /*
+     * Create and register configured controllers
+     *
+     * @param array $config
+     */
+    protected function readConfig(array $config)
+    {
+        $this->controllerBus = new ControllerBus($this);
 
         // Register Commands
         $this->controllerBus->addControllers($config['controllers']);
     }
-        
+
     /**
      * Returns SDK's Command Bus.
+     *
+     * @TODO: should probably be private
      *
      * @return ControllerBus
      */
@@ -41,7 +58,7 @@ class ControllerBot extends Bot
     {
         return $this->controllerBus;
     }
-    
+
     /**
      * Check update object for a command and process.
      *
@@ -49,27 +66,32 @@ class ControllerBot extends Bot
      */
     public function processUpdate(Update $update)
     {
-        Log::info("Process UPDATE");
-        
-        if($update->has('callback_query')){
+        if ($update->has('callback_query')) {
+            // Read MessageData
             $metaData = $this->metaDataRepository->load($this->getMessage($update));
-        }else{
+        } else {
+            // Read ConversationData
             $metaData = $this->metaDataRepository->load($update);
         }
-        
-        if($metaData->has('controller')){
-            $this->getControllerBus()->callController($metaData['controller']['name'], $metaData['controller']['method'], $update, $this->metaDataRepository);
-        }else{
+
+        // Check for forced Controller
+        if ($metaData->has('controller')) {
+            $this->getControllerBus()->callController(
+                $metaData['controller']['name'], $metaData['controller']['method'], $update, $this->metaDataRepository
+            );
+        } else {
             // No user data -> route Controller like normal
             $this->getControllerBus()->handler($update, $this->metaDataRepository);
         }
+
+        // After the controller finished, save all MetaData
         $this->metaDataRepository->saveAll();
-    }    
-    
-    // TODO: put into SDK
+    }
+
+    /* @TODO SDK: put into SDK */
     static function getMessage($update)
     {
-        switch ($update->detectType()){
+        switch ($update->detectType()) {
             case 'message':
                 $message = $update->getMessage();
                 break;

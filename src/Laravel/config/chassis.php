@@ -35,5 +35,14 @@ return [
                 ['\delayed', EchoController::class, 'delayed', Bubbling::AFTER]
             ],          
         ],
-    ]
+    ],
+    
+//    'telegram' => [
+//        'http_client_handler' => 
+//            new GuzzleHttpClient(
+//                new Client(
+//                    ['proxy' => "localhost:8888", 'verify' => false]
+//                )
+//            )
+//    ],
 ];

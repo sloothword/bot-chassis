@@ -5,25 +5,46 @@ namespace Chassis\Controller;
 use Telegram\Bot\Objects\Update;
 use Chassis\Bot\Bot;
 
-class EchoController extends Controller{      
-    
-    public function once(){
+/**
+ * Example Controller
+ */
+class EchoController extends Controller
+{
+
+    /**
+     * Echo text contained in Update once
+     */
+    public function once()
+    {
         $this->replyWithMessage([
             'text' => $this->getUpdate()->getMessage()->getText()
         ]);
     }
-    
-    public function twice(){
+
+    /**
+     * Echo text contained in Update twice
+     */
+    public function twice()
+    {
         $this->replyWithMessage([
             'text' => $this->getUpdate()->getMessage()->getText() . $this->getUpdate()->getMessage()->getText()
         ]);
     }
-    
-    public function delayed(){
-        $this->setNextController(self::class, 'delayedEcho', ['text' => $this->getUpdate()->getMessage()->getText()]);
+
+    /**
+     * Save text to echo after next Update
+     */
+    public function delayed()
+    {
+        $this->getConversationData()['text'] = $this->getUpdate()->getMessage()->getText();
+        $this->setNextController(self::class, 'delayedEcho');
     }
-    
-    public function delayedEcho(){
+
+    /**
+     * Reply with saved text earlier
+     */
+    public function delayedEcho()
+    {
         $this->delayed();
         $this->replyWithMessage([
             'text' => $this->getConversationData()['text']

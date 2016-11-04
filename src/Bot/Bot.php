@@ -1,29 +1,24 @@
 <?php
 
-// Hold API
-// Register Event Handler
-// Propagate to Controller
-
 namespace Chassis\Bot;
 
 use League\Event\Emitter;
-use Log;
 use Telegram\Bot\Api;
-use Telegram\Bot\Events\UpdateWasReceived;
 use Telegram\Bot\Objects\Update;
-use Telegram\Bot\Traits\Telegram;
 
-
-class Bot 
+/**
+ * Holds the Telegram API and provides easy entry points to query for and process new updates.
+ */
+class Bot
 {
-    // TODO: Not yet released
+    /* @TODO SDK: Refactor with trait when telegram-sdk releases v3 */
     //use Telegram;
-    
-    /** @var Api Holds the Super Class Instance. */
+
+    /** @var Api The telegram Api */
     protected $telegram = null;
 
     /**
-     * Returns Super Class Instance.
+     * Return the telegram Api
      *
      * @return Api
      */
@@ -33,11 +28,11 @@ class Bot
     }
 
     /**
-     * Set Telegram Api Instance.
+     * Set the telegram Api Instance.
      *
      * @param Api $telegram
      *
-     * @return $this
+     * @return Api
      */
     public function setTelegram(Api $telegram)
     {
@@ -45,81 +40,80 @@ class Bot
 
         return $this;
     }
-    
     // END TRAIT
-    
-    public function __construct(Api $api, $config) {
-        // TODO: Open issue on SDK
-        $api->setEventEmitter(new Emitter());
-        
-        $this->setTelegram($api);        
-        
-        $this->readConfig($config);
-        
-//        Log::info("Constructed Bot");
-//        $this->getTelegram()->getEventEmitter()->addListener(UpdateWasReceived::class, function (UpdateWasReceived $event) {
-//            \Log::info("EVENT");
-//            $this->processUpdate($event->getUpdate());
-//        });
-    }
-    
+
     /**
-     * Magically pass methods to the api.
+     * Create a new Bot
      *
-     * @param string $method
-     * @param array  $parameters
-     *
-     * @return mixed
+     * @param Api $api
+     * @param array $config
      */
-//    public function __call($method, $parameters)
-//    {
-//        return call_user_func_array([$this->getTelegram(), $method], $parameters);
-//    }
-    
+    public function __construct(Api $api, array $config)
+    {
+
+        // TODO SDK: Open issue on SDK: should be done in Api->__contruct()
+        $api->setEventEmitter(new Emitter());
+
+        $this->setTelegram($api);
+
+        $this->readConfig($config);
+    }
+
     /**
-     * Check update object for a command and process.
+     * Handle a newly arrived update
      *
      * @param Update $update
      */
     public function processUpdate(Update $update)
     {
-        
+        // Basic bot does not handle updates. Overriden in subclasses.
     }
-    
-    function readConfig($config)
-    {
-        
-    }
-    
+
     /**
-     * Checks for pending telegram updates. If available, they get read, processed, confirmed and returned.
+     * Parse in Bot configuration
      *
-     * @param boolean $webhook Signals to read update from webhook.
-     * @param array $params See Api->getUpdates()
+     * @param array $config
+     */
+    protected function readConfig($config)
+    {
+
+    }
+
+    /**
+     * Check for pending telegram updates. They get read, processed, confirmed and returned.
+     *
+     * @param boolean $webhook If true, read updates from webhook instead
+     * @param array $params Parameters for Api->getUpdates()
+     * @param boolean $process Set to false to disable processing of updates
      * @return Update[]
      */
     public function checkForUpdates($webhook = false, $params = [], $process = true)
     {
         if ($webhook) {
-            $updates = $this->getTelegram()->getWebhookUpdates();
+            $updates = [$this->getTelegram()->getWebhookUpdate()];
         } else {
             $updates = $this->getTelegram()->getUpdates($params);
         }
-        
+
         $highestId = -1;
         foreach ($updates as $update) {
-            if($process){
+            if ($process) {
                 $this->processUpdate($update);
-            }            
+            }
             $highestId = $update->getUpdateId();
         }
-        
+
         if ($highestId != -1) {
             $this->confirmUpdate($highestId);
         }
         return $updates;
     }
-    
+
+    /**
+     * Manually tell Telegram to not send the updates any more.
+     *
+     * @param int $highestUpdateId
+     */
     public function confirmUpdate($highestUpdateId)
     {
         $params = [];
