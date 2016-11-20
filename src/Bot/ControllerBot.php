@@ -4,7 +4,6 @@ namespace Chassis\Bot;
 
 use Chassis\Bot\Bot;
 use Chassis\Controller\ControllerBus;
-use Chassis\Integration\Redis\Storage;
 use Chassis\MetaData\MetaDataRepository;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
@@ -25,13 +24,22 @@ class ControllerBot extends Bot
      *
      * @param Api $api
      * @param array $config
+     * @param MetaDataRepository $repo
+     * @param ControllerBus $bus
      */
-    public function __construct(Api $api, array $config)
+    public function __construct(Api $api, array $config, MetaDataRepository $repo, ControllerBus $bus = null)
     {
+        if($bus !== null){
+            $this->controllerBus = $bus;
+        }else{
+            $this->controllerBus = new ControllerBus($this);
+        }
+
         parent::__construct($api, $config);
 
-        /** @TODO: read storage backend from config */
-        $this->metaDataRepository = new MetaDataRepository(new Storage());
+
+        $this->metaDataRepository = $repo;
+
     }
 
     /*
@@ -41,8 +49,6 @@ class ControllerBot extends Bot
      */
     protected function readConfig(array $config)
     {
-        $this->controllerBus = new ControllerBus($this);
-
         // Register Commands
         $this->controllerBus->addControllers($config['controllers']);
     }

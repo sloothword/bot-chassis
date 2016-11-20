@@ -7,31 +7,31 @@ use Log;
 
 class Storage implements StorageInterface
 {
-    
-    public function delete($userId, $chatId, $key) {
-        BotStorage::where('user_id', '=', $userId)
-            ->where('chat_id', '=', $chatId)
-            ->where('key', '=', $key)
+
+    public function delete($key) {
+        BotStorage::where('key', '=', $key)
             ->delete();
     }
 
-    public function load($userId, $chatId, $key) {
-        Log::info('Load', [$userId, $chatId, $key]);
-        $model = BotStorage::where('user_id', '=', $userId)
-            ->where('chat_id', '=', $chatId)
-            ->where('key', '=', $key)
+    public function load($key) {
+        $model = BotStorage::where('key', '=', $key)
             ->first();
-        
+
         if($model){
-            Log::info('Loaded', json_decode($model->data, true));
             return json_decode($model->data, true);
         }
-        return null;        
+        return null;
     }
 
-    public function save($userId, $chatId, $key, $data) {
+    public function save($key, $data) {
         BotStorage::updateOrCreate(
-            ['user_id'=>$userId, 'chat_id' => $chatId, 'key'=> $key],
+            ['key'=> $key],
             ['data' => json_encode($data)]);
+    }
+
+    public function flush()
+    {
+        // TODO: improve performance
+        BotStorage::delete();
     }
 }

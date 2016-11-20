@@ -4,6 +4,12 @@ namespace Chassis\Bot;
 
 use Chassis\Bot\Bot;
 use Chassis\Bot\BotsManager as ChassisBotsManager;
+use Chassis\Integration\Legacy\HasContainer;
+use Chassis\Integration\Redis\Storage as RedisStorage;
+use Chassis\Integration\StorageInterface;
+use Chassis\MetaData\MetaDataRepository;
+use Illuminate\Contracts\Container\Container;
+use Telegram\Bot\Api;
 use Telegram\Bot\BotsManager as TelegramBotsManager;
 
 /**
@@ -12,6 +18,7 @@ use Telegram\Bot\BotsManager as TelegramBotsManager;
  */
 class BotsManager
 {
+    use HasContainer;
 
     /** @var ChassisBotsManager */
     protected $botsManager;
@@ -25,14 +32,13 @@ class BotsManager
     /**
      * Initialize both BotsManager and setup config
      *
-     * @param array $telegramConfig Array of the telegram config file
      * @param array $chassisConfig Array of the Chassis config file
+     * @param array $telegramConfig Array of the telegram config file
      *
-     * @TODO: Reorder arguments and possibly remove telegramConfig
      */
-    public function __construct(array $telegramConfig, array $chassisConfig)
+    public function __construct(array $chassisConfig, array $telegramConfig, Container $container = null)
     {
-        // Extract inlcude telegram config keys
+        // Extract telegram config keys
         if (isset($chassisConfig['telegram'])) {
             $telegramConfig = array_merge($telegramConfig, $chassisConfig['telegram']);
         }
@@ -42,7 +48,66 @@ class BotsManager
         $telegramConfig['bots'] = $chassisConfig['bots'];
 
         $this->config = $chassisConfig;
+        \Log::info($telegramConfig);
         $this->botsManager = new TelegramBotsManager($telegramConfig);
+
+        if($container != null){
+            $this->setContainer($container);
+        }
+        if(isset($chassisConfig['classes'])){
+            $this->initializeContainer($chassisConfig['classes']);
+        }
+
+    }
+
+    private function initializeContainer($classes)
+    {
+        if(!$this->hasContainer()){
+            $this->setContainer(new \Illuminate\Container\Container());
+        }
+
+        // Default Implementations
+        $classes = $classes + [
+            'bot' => ControllerBot::class,
+            'storage' => RedisStorage::class
+        ];
+
+        $subClass = [
+            'bot' => Bot::class,
+            'storage' => StorageInterface::class
+        ];
+
+        foreach ($classes as $key => $class){
+
+            if(array_has($subClass, $key)){
+                // Check is needed
+
+                if(is_subclass_of($class, $subClass[$key]) || $class == $subClass[$key]){
+                    // Check is passed
+
+                    if(interface_exists($subClass[$key])){
+                        // Register under interface
+                        $this->getContainer()->bind($subClass[$key], $class);
+                    }else{
+                        // Register under key
+                        $this->getContainer()->bind($key, $class);
+                    }
+
+                }else{
+                    // Check is failed
+                    throw new InvalidArgumentException("Class " .$class . " needs to implement " .$subClass[$key]);
+                }
+            }else{
+
+                // No check needed
+                $this->getContainer()->bind($key, $class);
+            }
+
+        }
+
+        if(is_a($classes['bot'], Bot::class)){
+            $this->getContainer()->bind('bot', $classes['bot']);
+        }
     }
 
     /**
@@ -59,6 +124,10 @@ class BotsManager
 
         if (!isset($this->bots[$name])) {
             $this->bots[$name] = $this->makeBot($name);
+        }
+
+        if($this->hasContainer()){
+            $this->bots[$name]->setContainer($this->getContainer());
         }
 
         return $this->bots[$name];
@@ -89,9 +158,8 @@ class BotsManager
         }
 
         $config = $this->getBotConfig($name);
-
-        $botClass = $this->config['classes']['bot'];
-        return new $botClass($api, $config);
+        $repo = new MetaDataRepository($this->getContainer()->make(StorageInterface::class));
+        return $this->getContainer()->make('bot', [$api, $config, $repo, null]);
     }
 
     /**

@@ -1,15 +1,16 @@
 <?php
 
+namespace Chassis\MetaData;
+
 use Chassis\MetaData\MetaDataRepository;
 use Illuminate\Support\Collection;
-
-namespace Chassis\MetaData;
 
 /**
  * Saves an additional data array linked to a Telegram object
  */
 class MetaData extends Collection
 {
+
     /** @var boolean MetaData shall be deleted */
     var $shallRemove = false;
 
@@ -19,7 +20,8 @@ class MetaData extends Collection
      * @param MetaDataRepository $repo
      * @param string $key Own key
      */
-    public function connect($repo, $key){
+    public function connect($repo, $key)
+    {
         $this->repo = $repo;
         $this->key = $key;
     }
@@ -29,7 +31,8 @@ class MetaData extends Collection
      *
      * @return Collection
      */
-    public function disconnect(){
+    public function disconnect()
+    {
         return new Collection($this->items);
     }
 
@@ -37,7 +40,8 @@ class MetaData extends Collection
      * Replace all items with a Collection
      * @param Collection $metaData
      */
-    public function replaceItems($metaData){
+    public function replaceItems($metaData)
+    {
         $this->items = $metaData->all();
         $this->shallRemove = $this->isEmpty();
     }
@@ -48,10 +52,11 @@ class MetaData extends Collection
     /**
      * Save meta data back to repository
      */
-    public function save(){
-        if($this->shallRemove){
+    public function save()
+    {
+        if ($this->shallRemove) {
             $this->repo->delete($this->getKey());
-        }else{
+        } else {
             $this->repo->save($this);
         }
     }
@@ -67,8 +72,8 @@ class MetaData extends Collection
     /**
      * Delete all entries
      */
-    public function clear(){
+    public function clear()
+    {
         $this->replaceItems(new Collection());
     }
 }
-

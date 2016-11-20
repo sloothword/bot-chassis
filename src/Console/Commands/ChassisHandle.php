@@ -15,7 +15,7 @@ class ChassisHandle extends Command
      *
      * @var string
      */
-    protected $signature = 'chassis:handle';
+    protected $signature = 'chassis:handle {bot?} {--loop} {--timeout=10}';
 
     /**
      * The console command description.
@@ -25,36 +25,44 @@ class ChassisHandle extends Command
     protected $description = 'Read and handle updates';
 
     /**
-     * Execute the console command.
+     * Check and process telegram updates
      *
      * @return mixed
      */
     public function handle()
     {
 
-        $this->comment("Startup default bot");
+        $loop = $this->hasOption('loop');
+
+        $timeout = $this->option('timeout');
 
         /** @var BotsManager * */
         $botsManager = resolve('chassis');
 
-        $this->comment("Default Bot: " . $botsManager->getDefaultBot());
+        $botName = null;
 
-        $bot = $botsManager->bot();
+        if($this->argument('bot') != null){
+            $botName = $this->argument('bot');
+            $this->comment("Starting " .$botName);
+        }else{
+            $this->comment("Starting default bot: " .$botsManager->getDefaultBot());
+        }
 
-        while (true) {
+        $bot = $botsManager->bot($botName);
 
+        do {
             // Long poll for updates
-            $updates = $bot->checkForUpdates(false, ['timeout' => 60]);
+            $updates = $bot->checkForUpdates(false, ['timeout' => $timeout]);
 
             if (count($updates) > 0) {
                 $this->comment("Processed " . count($updates));
             } else {
-                $this->comment("Timed out -> Start next long poll");
+                $this->comment("Timed out");
             }
             foreach ($updates as $update) {
                 $this->comment($this->getUpdateText($update));
             }
-        }
+        } while ($loop);
     }
 
     /**

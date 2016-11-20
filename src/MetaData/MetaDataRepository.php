@@ -91,7 +91,7 @@ class MetaDataRepository
         if($object instanceof Update){
 
             // Link to Conversation
-            $message = $object->getMessage();
+            $message = \Chassis\Bot\ControllerBot::getMessage($object);
             $userId = $message->getFrom()->getId();
             $chatId = $message->getChat()->getId();
             return "U:" .$userId ."|" .$chatId;

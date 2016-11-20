@@ -11,8 +11,9 @@ use Telegram\Bot\Objects\Update;
  */
 class Bot
 {
-    /* @TODO SDK: Refactor with trait when telegram-sdk releases v3 */
+    /* @TODO SDK: Refactor with traits when telegram-sdk releases v3 */
     //use Telegram;
+    use \Chassis\Integration\Legacy\HasContainer;
 
     /** @var Api The telegram Api */
     protected $telegram = null;
@@ -37,8 +38,6 @@ class Bot
     public function setTelegram(Api $telegram)
     {
         $this->telegram = $telegram;
-
-        return $this;
     }
     // END TRAIT
 
@@ -74,7 +73,7 @@ class Bot
      *
      * @param array $config
      */
-    protected function readConfig($config)
+    protected function readConfig(array $config)
     {
 
     }

@@ -87,7 +87,7 @@ class Controller
 
     /**
      * Helper function to create a reply Keyboard from a Collection
-     * @TODO: WIP, needs rewrite or move
+     * @TODO: move to SDK
      *
      * @param array $buttons
      * @param boolean $inline
@@ -96,23 +96,64 @@ class Controller
      */
     protected function createReplyKeyboard($buttons, $inline = false, $cols = null)
     {
+        $keyboard = $this->makeButtons($buttons, $inline);
+        $keyboard = $this->reorderKeyboard($buttons, $cols);
+        return $this->makeKeyboard($keyboard, $inline);
+    }
 
-        $count = count($buttons);
-        if ($cols == null) {
-            $cols = 3;
+    public function makeKeyboard($keyboard, $inline){
+        $property = 'keyboard';
+        if ($inline) {
+            $property = 'inline_keyboard';
         }
 
-        $rows = [];
+        $k = Keyboard::make([$property => $keyboard]);
+        $k->setResizeKeyboard(true);
+        $k->setOneTimeKeyboard(true);
+        return $k;
+    }
+
+    /**
+     * Create an array of Buttons from a Collection
+     */
+    public function makeButtons($buttons, $inline = false)
+    {
         $row = [];
-        foreach ($buttons as $button) {
+        $noKeys = is_array($buttons) && !$this->isAssoc($buttons);
+
+        foreach ($buttons as $key => $button) {
+
+            if($noKeys){
+                $key = $button;
+            }
 
             if ($inline) {
-                $row[] = Keyboard::inlineButton(['text' => $button, 'callback_data' => $button]);
+                $row[] = Keyboard::inlineButton(['text' => $button, 'callback_data' => (string)$key]);
             } else {
                 $row[] = Keyboard::button(['text' => $button]);
             }
+        }
+        return $row;
+    }
 
-            if (count($row) == $cols) {
+    /**
+     * Checks if array is associative
+     * @param array $arr
+     * @return boolean
+     */
+    private function isAssoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+
+    public function reorderKeyboard($buttons, $width = 3, $lastRow = null)
+    {
+        $rows = [];
+        $row = [];
+        foreach ($buttons as $button) {
+            $row[] = $button;
+            if (count($row) == $width) {
                 $rows[] = $row;
                 $row = [];
             }
@@ -120,16 +161,10 @@ class Controller
         if (count($row) > 0) {
             $rows[] = $row;
         }
-
-        $property = 'keyboard';
-        if ($inline) {
-            $property = 'inline_keyboard';
+        if($lastRow){
+            $rows[] = $lastRow;
         }
-
-        $k = Keyboard::make([$property => $rows]);
-        $k->setResizeKeyboard(true);
-        $k->setOneTimeKeyboard(true);
-        return $k;
+        return $rows;
     }
 
     /**

@@ -54,8 +54,20 @@ class ControllerBus
     {
         $hierarchy = $this->expandHierarchy($controller[0]);
         $class = $controller[1];
-        $method = $controller[2];
-        $bubbling = isset($controller[3]) ? $controller[3] : Bubbling::NONE;
+
+        $method = 'handle';
+        $bubbling = Bubbling::NONE;
+
+        if(isset($controller[2])){
+            if(is_integer($controller[2])){
+                $bubbling = $controller[2];
+            }else{
+                $method = $controller[2];
+                if(isset($controller[3])){
+                    $bubbling = $controller[3];
+                }
+            }
+        }
 
         $key = $this->getControllerKey($hierarchy, $bubbling);
 
@@ -73,20 +85,38 @@ class ControllerBus
      */
     public function expandHierarchy($shortKey)
     {
-        /** @TODO: complete */
         $longKeys = [
             '*' => 'update',
-            'message' => 'update.message',
-            'text' => 'update.message.text',
-            'command' => 'update.message.text.command'
+            'command' => 'update.message.text.command',
         ];
+
+        $updateKeys = [
+            'message', 'inline_query', 'chosen_inline_result', 'callback_query'
+        ];
+
+        $messageKeys = [
+            'text', 'audio', 'document', 'photo', 'sticker', 'video',
+            'voice', 'contact', 'location', 'venue', 'new_chat_member',
+            'left_chat_member', 'new_chat_title', 'new_chat_photo',
+            'delete_chat_photo', 'group_chat_created',
+            'supergroup_chat_created', 'channel_chat_created',
+            'migrate_to_chat_id', 'migrate_from_chat_id', 'pinned_message'
+        ];
+
+        foreach ($updateKeys as $k) {
+            $longKeys[$k] = $longKeys['*'] .$k;
+        }
+
+        foreach ($messageKeys as $k) {
+            $longKeys[$k] = $longKeys['message'] .$k;
+        }
 
         if(array_key_exists($shortKey, $longKeys)){
             return $longKeys[$shortKey];
         }
 
         // Detect Commands
-        if($shortKey[0] === '\\'){
+        if($shortKey[0] === '/'){
             return $longKeys['command'] .'.' .substr($shortKey, 1);
         }
 

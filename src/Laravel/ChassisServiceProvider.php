@@ -38,37 +38,37 @@ class ChassisServiceProvider extends ServiceProvider
     protected function setupConfig(Application $app)
     {
 //        $source = __DIR__.'/config/chassis.php';
-        
+
 //        if ($app instanceof LaravelApplication && $app->runningInConsole()) {
         $this->publishes([
             __DIR__.'/config/chassis.php' => config_path('chassis.php')
         ], 'config');
-            
+
         $this->publishes([
             __DIR__.'/migrations' => database_path('migrations')
         ], 'migrations');
-        
+
 //        } elseif ($app instanceof LumenApplication) {
 //            $app->configure('chassis');
 //        }
 
 //        $this->mergeConfigFrom($source, 'chassis');
-            
+
     }
-    
+
     public function register() {
         $this->commands([
             \Chassis\Console\Commands\ChassisHandle::class,
             \Chassis\Console\Commands\TelegramMe::class,
-            \Chassis\Console\Commands\ChassisFlush::class,            
+            \Chassis\Console\Commands\ChassisFlush::class,
         ]);
-        
-       
+
+
         $this->app->singleton('chassis', function ($app) {
             $chassisConfig = (array)$app['config']['chassis'];
             $telegramConfig = (array)$app['config']['telegram'];
 
-            return (new BotsManager($telegramConfig, $chassisConfig));
+            return (new BotsManager($chassisConfig, $telegramConfig));
         });
 
         $this->app->alias('chassis', BotsManager::class);

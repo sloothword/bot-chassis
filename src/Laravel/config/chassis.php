@@ -3,20 +3,14 @@ use Chassis\Controller\DummyController;
 use Chassis\Controller\Bubbling;
 
 return [
-    
-    /*
-     * TODO: Move to DI / service container
-     */
-    'classes' => [
-        'bot' => Chassis\Bot\Bot::class,
-        'user' => Chassis\Integration\EloquentUser::class,
-        'storage' => Chassis\Integration\EloquentStorage::class
-    ],
 
-    'sharedconfig' => [],
 
-    'pipeline' => [],
-    
+    // Use your own bot and storage implementation
+//    'classes' => [
+//        'bot' => Chassis\Bot\ControllerBot::class,
+//        'storage' => Chassis\Integration\Redis\Storage::class
+//    ],
+
     /*
     |--------------------------------------------------------------------------
     | Telegram Bots
@@ -28,21 +22,21 @@ return [
         'mybot' => [
             'username'  => 'BOT-USERNAME',
             'token' => env('TELEGRAM_BOT_TOKEN', 'BOT-TOKEN'),
-            'shared' => [],
             'controllers' => [
                 ['text', EchoController::class, 'once', Bubbling::NONE],
-                ['\double', EchoController::class, 'twice', Bubbling::AFTER],
-                ['\delayed', EchoController::class, 'delayed', Bubbling::AFTER]
-            ],          
+                ['/double', EchoController::class, 'twice', Bubbling::AFTER],
+                ['/delayed', EchoController::class, 'delayed', Bubbling::AFTER]
+            ],
         ],
     ],
-    
-//    'telegram' => [
-//        'http_client_handler' => 
+
+    'telegram' => [
+        // Example Proxy config e.g. for Fiddler
+//        'http_client_handler' =>
 //            new GuzzleHttpClient(
 //                new Client(
 //                    ['proxy' => "localhost:8888", 'verify' => false]
 //                )
 //            )
-//    ],
+    ],
 ];

@@ -2,7 +2,9 @@
 
 namespace Chassis\Console\Commands;
 
+use Chassis\Integration\StorageInterface;
 use Illuminate\Console\Command;
+use Telegram\Bot\BotsManager;
 
 class ChassisFlush extends Command
 {
@@ -28,14 +30,15 @@ class ChassisFlush extends Command
      */
     public function handle()
     {
-        /*
-         * Flush the MetaData storage
-         * @TODO: read config for desired storage
-         */
-        (new \Chassis\Integration\Redis\Storage())->flush();
+
+
+        /** @var BotsManager */
+        $botsManager = resolve('chassis');
+
+        // Flush the MetaData storage
+        $botsManager->getContainer()->make(StorageInterface::class)->flush();
 
         // Read and discard all updates
-        $botsManager = resolve('chassis');
         $bot = $botsManager->bot();
         $bot->checkForUpdates(false, [], false);
     }
