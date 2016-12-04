@@ -71,8 +71,8 @@ You can use the `controllers` array to configure, when to call which Controller 
 Each entry defines one route: 
 `["/somecommand", MyController::class, "myMethod", Bubbling::BEFORE]`
 
-\# | Entry | Example | Defines | Mandatory
---| ----- | ------- | ----------- | --------
+\#  | Entry | Example | Defines | Mandatory
+--- | ----- | ------- | ----------- | --------
 0 | Trigger | `/somecommand` | when to execute | Yes
 1 | Controller | `MyController::class` | which Controller to call | Yes
 2 | Method | `myMethod` | which Controller method to call | No, default is `handle`
@@ -82,7 +82,7 @@ Each entry defines one route:
 As trigger you can either use the short key or the full hierarchy from the following table:
 
 Hierarchy | Key | Called
---- | ------
+--- | ------ | ---
 update | * | for every update
 update.message | message | for every message
 update.message.text | text | for every message with text
@@ -160,7 +160,7 @@ The following artisan commands are available for your convenience:
 Command | Description
 -------------- | -----------
 `chassis:handle`| Load and process all pending telegram updates. Calls default bot if not specified by `--bot=BOTNAME`. Add `--loop` to continously check for new updates. Command uses long polling with `--timeout=10`. 
-`chassis:flush` | Flushes all MetaData from Redis and all pending telegram updates (without processing)
+`chassis:flush` | Flushes all MetaData from storage and all pending telegram updates (without processing)
 
 
 ## Webhook
@@ -192,7 +192,7 @@ Less `__call` magic
 - the Bot classes do not magically call the associated Api
 
 
-
+<!--
 return [
     
     'classes' => [
@@ -262,3 +262,5 @@ Input middleware included:
 Output middleware included:
 - Emojifier: Emojify from telegram-bot-sdk
 - UpdateDefaultSetter: fills some update fields with sensible defaults if not set.
+
+-->
