@@ -59,7 +59,7 @@ class ChassisServiceProvider extends ServiceProvider
     public function register() {
         $this->commands([
             \Chassis\Console\Commands\ChassisHandle::class,
-            \Chassis\Console\Commands\TelegramMe::class,
+            \Chassis\Console\Commands\ChassisMe::class,
             \Chassis\Console\Commands\ChassisFlush::class,
         ]);
 
@@ -68,9 +68,15 @@ class ChassisServiceProvider extends ServiceProvider
             $chassisConfig = (array)$app['config']['chassis'];
             $telegramConfig = (array)$app['config']['telegram'];
 
+            // TODO: Add ->setContainer($app), Exception Facade root has not been set
             return (new BotsManager($chassisConfig, $telegramConfig));
         });
 
         $this->app->alias('chassis', BotsManager::class);
+    }
+
+    public function provides()
+    {
+        return ['chassis', BotsManager::class];
     }
 }

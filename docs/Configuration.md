@@ -139,19 +139,28 @@ Key | Requirements
 
 
 ## Laravel
-Add the LaravelServiceProvider in the app.php
+Add the LaravelServiceProvider and Facade in the app.php
 ```
 'providers' => [
         ...
         
         Chassis\Laravel\ChassisServiceProvider::class,
+        ...
+],
+
+'aliases' => [
+		...
+        'Chassis' => Chassis\Laravel\Facades\Chassis::class,
+        ...
+],
+
 ```
 Publish the configuration (and migrations)
 ```
 artisan vendor:publish
 ```
 
-The `Telegram` facade returns a BotsManager as configured by `config/chassis.php`.
+The `Chassis` facade returns a BotsManager as configured by `config/chassis.php`.
 
 #### Artisan
 
@@ -161,6 +170,7 @@ Command | Description
 -------------- | -----------
 `chassis:handle`| Load and process all pending telegram updates. Calls default bot if not specified by `--bot=BOTNAME`. Add `--loop` to continously check for new updates. Command uses long polling with `--timeout=10`. 
 `chassis:flush` | Flushes all MetaData from storage and all pending telegram updates (without processing)
+`chassis:me` | gets the Telegram profile of the default bot. This is a simple way to check if the bot token is setup correctly
 
 
 ## Webhook
@@ -171,7 +181,7 @@ $bot = $botsManager->bot(); // or ->bot($botName)
 $bot->checkForUpdates(true);
 
 // Laravel
-Telegram::bot()->checkForUpdates(true);
+Chassis::bot()->checkForUpdates(true);
 ```
 
 ## <a name="differences"></a> Coming from telegram-bot-sdk
