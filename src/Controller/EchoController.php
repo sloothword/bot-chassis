@@ -2,9 +2,6 @@
 
 namespace Chassis\Controller;
 
-use Telegram\Bot\Objects\Update;
-use Chassis\Bot\Bot;
-
 /**
  * Example Controller
  */
@@ -17,7 +14,7 @@ class EchoController extends Controller
     public function once()
     {
         $this->replyWithMessage([
-            'text' => $this->getUpdate()->getMessage()->getText()
+            'text' => $this->getText()
         ]);
     }
 
@@ -27,7 +24,7 @@ class EchoController extends Controller
     public function twice()
     {
         $this->replyWithMessage([
-            'text' => $this->getUpdate()->getMessage()->getText() . $this->getUpdate()->getMessage()->getText()
+            'text' => $this->getText() . $this->getText()
         ]);
     }
 
@@ -36,8 +33,9 @@ class EchoController extends Controller
      */
     public function delayed()
     {
-        $this->getConversationData()['text'] = $this->getUpdate()->getMessage()->getText();
-        $this->setNextController(self::class, 'delayedEcho');
+        $conversation = $this->getConversationData();
+        $conversation['text'] = $this->getText();
+        $conversation->nextConversationStep(self::class, 'delayedEcho');
     }
 
     /**

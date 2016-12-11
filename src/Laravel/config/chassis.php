@@ -1,5 +1,5 @@
 <?php
-use Chassis\Controller\DummyController;
+use Chassis\Controller\EchoController;
 use Chassis\Controller\Bubbling;
 
 return [

@@ -48,7 +48,6 @@ class BotsManager
         $telegramConfig['bots'] = $chassisConfig['bots'];
 
         $this->config = $chassisConfig;
-        \Log::info($telegramConfig);
         $this->botsManager = new TelegramBotsManager($telegramConfig);
 
         if($container != null){
@@ -56,11 +55,13 @@ class BotsManager
         }
         if(isset($chassisConfig['classes'])){
             $this->initializeContainer($chassisConfig['classes']);
+        }else{
+            $this->initializeContainer();
         }
 
     }
 
-    private function initializeContainer($classes)
+    private function initializeContainer($classes = [])
     {
         if(!$this->hasContainer()){
             $this->setContainer(new \Illuminate\Container\Container());

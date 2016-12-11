@@ -87,6 +87,11 @@ For more alternatives check the integration guide [Configuration].
 ### Installation
 Install PHP7, Laravel and Redis. Configure Laravel to use your database and redis instance.
 
+Tell composer to use the `telegram-bot-sdk` with `dev` stability (needed until we can use a stable version): 
+```
+composer require irazasyed/telegram-bot-sdk:@dev
+```
+
 Add `bot-chassis` to the composer.json:
 ```
 composer require sloothword/bot-chassis
@@ -120,7 +125,7 @@ Create a new Controller under your application namespace and structure.
 
 namespace App\Controller;
 
-use TelegramBot\Controller;
+use Chassis\Controller\Controller;
 
 class CountController extends Controller
 {
@@ -172,13 +177,13 @@ class CountController extends Controller
         
         $conversationData['count'] = $counter + $value;
         
-        $this->replyWithMessage(['text' => 'New value: ' .$conversationData['count']);
+        $this->replyWithMessage(['text' => 'New value: ' .$conversationData['count']]);
         
     }
     
     public function reset(){
     	$this->getConversationData()->forget('count');
-        $this->replyWithMessage(['text' => 'Reset counter');
+        $this->replyWithMessage(['text' => 'Reset counter']);
     }
 }
 
@@ -198,16 +203,21 @@ For the `/set` command we need to do three things:
 
 ```
 public function set(){	
-	$this->replyWithMessage(['text' => 'Insert new value:');
+	$this->replyWithMessage(['text' => 'Insert new value:']);
     $this->getConversationData()->nextConversationStep(self::class, 'saveCounter');
 }
 
 public function saveCounter(){
 	$value = intval($this->getText());
-    $this->getConversationData()['counter'] = $value;
-    $this->replyWithMessage(['text' => 'Set counter');
+    $conversationData = $this->getConversationData();
+    $conversationData['count'] = $value;
+    $this->replyWithMessage(['text' => 'Set counter to ' .$value]);
+    $conversationData->clearConversation();
 }
 ```
+Pay attention to the last line: as we set the next handling method to `saveCounter()` the bot will always call that same method untill we tell him not to `->clearConversation()`.
+
+> Note: This behaviour will change soon.
 
 ### Finish
 Play around with your finished bot.

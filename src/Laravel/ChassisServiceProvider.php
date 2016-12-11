@@ -68,11 +68,11 @@ class ChassisServiceProvider extends ServiceProvider
             $chassisConfig = (array)$app['config']['chassis'];
             $telegramConfig = (array)$app['config']['telegram'];
 
-            // TODO: Add ->setContainer($app), Exception Facade root has not been set
-            return (new BotsManager($chassisConfig, $telegramConfig));
+            return (new BotsManager($chassisConfig, $telegramConfig, $app));
         });
 
         $this->app->alias('chassis', BotsManager::class);
+
     }
 
     public function provides()

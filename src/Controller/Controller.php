@@ -86,6 +86,14 @@ class Controller
     }
 
     /**
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->getUpdate()->getMessage()->getText();
+    }
+
+    /**
      * Helper function to create a reply Keyboard from a Collection
      * @TODO: move to SDK
      *

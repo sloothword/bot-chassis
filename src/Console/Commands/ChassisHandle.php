@@ -32,7 +32,7 @@ class ChassisHandle extends Command
     public function handle()
     {
 
-        $loop = $this->hasOption('loop');
+        $loop = $this->option('loop');
 
         $timeout = $this->option('timeout');
 

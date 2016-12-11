@@ -104,11 +104,11 @@ class ControllerBus
         ];
 
         foreach ($updateKeys as $k) {
-            $longKeys[$k] = $longKeys['*'] .$k;
+            $longKeys[$k] = $longKeys['*'] ."." .$k;
         }
 
         foreach ($messageKeys as $k) {
-            $longKeys[$k] = $longKeys['message'] .$k;
+            $longKeys[$k] = $longKeys['message'] ."." .$k;
         }
 
         if(array_key_exists($shortKey, $longKeys)){
@@ -210,7 +210,7 @@ class ControllerBus
             }
         }
 
-        for($depth = $deepestFound; $depth <= $maxDepth; $depth++){
+        for($depth = $maxDepth; $depth > 0; $depth--){
             $controller = $this->getHandler($handlerKeys, $depth, Bubbling::NONE);
             if(count($controller) > 0){
                 $deepestFound = $depth;
